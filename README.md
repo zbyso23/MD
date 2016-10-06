@@ -1,7 +1,16 @@
 # MD
 simple markdown javascript parser
 
-code syntax highlight:
+support:
+- lists
+- simple tables: `[cel1; cel2; cel3 \nrow2 cel1; row2 cel2; row2 cel3]`
+- headers
+- links
+- images
+- code
+- links with images
+
+built in code syntax highlight:
 - javascript
 - python
 - html
