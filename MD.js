@@ -1,4 +1,4 @@
-// MD, copyright (c) by Zbigniew Lipka
+// MD.js, copyright (c) by Zbigniew Lipka
 // Distributed under an GNU GENERAL PUBLIC LICENSE version 3: https://github.com/zbyso23/MD/blob/master/LICENSE
 
 var MD, MD_ADDONS;
