@@ -1,0 +1,91 @@
+pre.md-code-syntax-lang-javascript {
+  background-color: #ffedc5;
+
+}
+
+pre.md-code-syntax-lang-javascript span {
+  opacity: 0.9;
+  font-weight: bold;
+}
+
+pre.md-code-syntax-lang-javascript span.md-code-syntax-command {
+  color: #b75757;
+}
+
+pre.md-code-syntax-lang-javascript span.md-code-syntax-controls {
+  color: #3d6562;
+}
+
+pre.md-code-syntax-lang-javascript span.md-code-syntax-symbol {
+  color: #bd6767;
+  background-color: #ccfff8;
+}
+
+pre.md-code-syntax-lang-python {
+  background-color: #edffc5;
+  color: #4c3342;
+}
+
+pre.md-code-syntax-lang-python span {
+  opacity: 0.9;
+  font-weight: bold;
+}
+
+pre.md-code-syntax-lang-python span.md-code-syntax-command {
+  color: #b75757;
+}
+
+pre.md-code-syntax-lang-python span.md-code-syntax-controls {
+  color: #2a4bb1;
+}
+
+pre.md-code-syntax-lang-python span.md-code-syntax-symbol {
+  color: #bd6767;
+  background-color: #faffa3;
+  font-weight: normal;
+}
+
+pre.md-code-syntax-lang-html {
+  background-color: #f5f6ff;
+  color: #0c1b23;
+}
+
+pre.md-code-syntax-lang-html span {
+  opacity: 0.9;
+  font-weight: bold;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-command {
+  color: #c38484;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-controls {
+  color: #6893e8;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-symbol {
+  color: #bd6767;
+  background-color: #faffa3;
+  font-weight: normal;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-attribute-name {
+  color: #847bf1;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-attribute-control {
+  color: #729272;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-attribute-quote {
+  color: #841212;
+}
+
+pre.md-code-syntax-lang-html span.md-code-syntax-attribute-value {
+  color: #599242;
+}
+
+pre span.md-code-syntax-percent {
+  content: '%';
+  color: #2a4bb1;
+}
