@@ -588,7 +588,7 @@ MD = function()
 
 	var _parse = function(string)
 	{
-		lines = string.split('\n');
+		var lines = string.split('\n');
 		lines = parseCode(lines);
 		lines = parseEmpty(lines);
 		lines = parseImages(lines);
