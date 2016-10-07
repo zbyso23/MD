@@ -1,6 +1,8 @@
 # MD.js
 simple markdown javascript parser
 
+Requires U (small utils library) - included in project folder
+
 support:
 - lists
 - simple tables: `[cel1; cel2; cel3 \nrow2 cel1; row2 cel2; row2 cel3]`
