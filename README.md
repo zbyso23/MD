@@ -1,4 +1,4 @@
-# MD
+# MD.js
 simple markdown javascript parser
 
 support:
