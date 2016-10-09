@@ -70,6 +70,11 @@ MD = function(config)
 				'>': '&gt;',
 				'{': '&#123;',
 				'}': '&#125;',
+				'[': '&#123;',
+				']': '&#125;',
+				'(': '&#40;',
+				')': '&#41;',
+				'$': '&#36;',
 				';': '&#59;',
 				':': '&#58;'
 			}[m];
@@ -157,6 +162,70 @@ MD = function(config)
 
 	};
 
+
+	var codeHighlighterIni = function(language, lines, addTags, parseCodeFunction) 
+	{
+		for(var i in lines)
+		{
+			var line = lines[i];
+			var replaceSymbols = function(symbol) 
+			{
+				return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
+			}
+			var replaceCommands = function(x, y)
+			{
+				console.log('>> INI <<', arguments);
+				if(arguments[3] === ';')
+				{
+					return '<span class="md-code-syntax md-code-syntax-comments">&#59;' + arguments[4] + '</span>';
+				}
+				if(arguments[7] === '=')
+				{
+					return '<span class="md-code-syntax md-code-syntax-attribute-name">' + arguments[6] + '</span><span class="md-code-syntax md-code-syntax-attribute-control">=</span><span class="md-code-syntax md-code-syntax-attribute-value">' + arguments[8].trim() + '</span>';
+				}
+				return '<span class="md-code-syntax md-code-syntax-controls">[</span><span class="md-code-syntax md-code-syntax-command">' + arguments[10] + '</span><span class="md-code-syntax md-code-syntax-controls">]</span>';
+			}
+			var re = new RegExp('((([;]{1,1})(.*))|(^([a-zA-Z0-9]{1,})([\=]{1,1})([^;]{1,}))|([\[]{1,1}([^\]]{1,})[\]]{1,1}))', 'g');
+			line = line.replace(re, replaceCommands);
+			lines[i] = line;
+		}
+		return lines;
+	};
+
+
+	var codeHighlighterPHP = function(language, lines, addTags, parseCodeFunction) 
+	{
+		for(var i in lines)
+		{
+			var line = lines[i];
+			var keywords;
+			keywords = new RegExp("");
+			var replaceSymbols = function(symbol) 
+			{
+				return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
+			}
+			var replaceCommands = function(x, y)
+			{
+				console.log('codeHighlighterPHP ', arguments);
+				if(arguments[5] === '$')
+				{
+					return '<span class="md-code-syntax md-code-syntax-controls">&#36;</span><span class="md-code-syntax md-code-syntax-symbol">' + unHTML(arguments[2].substring(1)) + '</span>' + arguments[0].substring(arguments[2].length);
+				}
+				if(U.isString(arguments[3]))
+				{
+					return '<span class="md-code-syntax md-code-syntax-controls">' + arguments[3] + '</span>' + arguments[0].substring(arguments[3].length);
+				}
+				var line = '<span class="md-code-syntax md-code-syntax-command">' + arguments[2] + '</span>' + arguments[0].substring(arguments[2].length);
+				return line;
+			}
+			var re = new RegExp('((([\=\(\)\{\}]{1,1})|(([$]{1,1})[a-zA-Z0-9_\-]{1,})|halt_compiler|endforeach|abstract|callable|case|catch|class|clone|const|continue|declare|default|elseif|empty|enddeclare|endfor|endif|endswitch|endwhile|exit|extends|final|finally|foreach|function|global|goto|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|print|private|protected|public|require_once|require|return|static|switch|array|break|throw|trait|unset|while|yield|eval|echo|else|die|for|try|use|var|new|xor|and|as|do|if|or){1,1}[^a-zA-Z0-9$\(\)]{0,}){1,1}', 'gi')
+			line = line.replace(re, replaceCommands);
+			lines[i] = line;
+		}
+		return lines;
+	}
+
+
 	var codeHighlighterHTML = function(language, lines, addTags, parseCodeFunction) 
 	{
 		var isCodeJs         = false;
@@ -225,12 +294,10 @@ MD = function(config)
 			line = line.replace(re, replaceCommands);
 			if(isCodeJs && false === isCodeJsStarted && false === isCodeJsEnded)
 			{
-				console.log('isCodeJs '+line, isCodeJs)
 				line = (line.length > 1) ? line.replace(line, parseCodeLinesByLanguage('javascript', [line]).join('')) : line;
 			}
 			if(isCodeCss && false === isCodeCssStarted && false === isCodeCssEnded)
 			{
-				console.log('isCodeCss '+line, isCodeCss)
 				line = (line.length > 1) ? line.replace(line, parseCodeLinesByLanguage('css', [line]).join('')) : line;
 			}
 			lines[i] = line;
@@ -336,7 +403,9 @@ MD = function(config)
 		python: codeHighlighterPython,
 		html: codeHighlighterHTML,
 		css: codeHighlighterCSS,
-		bash: codeHighlighterBash
+		bash: codeHighlighterBash,
+		ini: codeHighlighterIni,
+		php: codeHighlighterPHP
 	};
 
 	var formatNonBreak = [];
