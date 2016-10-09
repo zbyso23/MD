@@ -11,6 +11,7 @@ support:
 - links
 - images
 - code
+- code inline
 - links with images
 
 built in code syntax highlight:
