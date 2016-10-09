@@ -20,6 +20,8 @@ built in code syntax highlight:
 - html *(1)*
 - css *(1)*
 - bash *(1)*
+- ini *(1)*
+- php *(1)*
 
 
 (1) is supported only in extended mode (default: basic)
