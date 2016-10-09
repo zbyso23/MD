@@ -29,9 +29,25 @@ MD = function()
 			'class': 'md-image'
 		},
 		table: {
-			'class': 'table md-table'
+			'class': 'table md-table table-striped table-hover'
 		}
 	}
+
+	var sanitizeHTML = function(string)
+	{
+		string = string.replace(/[<>{};:]/g, function (m) {
+			return {
+				'<': '&lt;',
+				'>': '&gt;',
+				'{': '&#123;',
+				'}': '&#125;',
+				';': '&#59;',
+				':': '&#58;'
+			}[m];
+		});
+		return string;
+	}
+
 
 	var codeHighlighterJavascript = function(language, lines, addTags, parseCodeFunction)
 	{
@@ -49,7 +65,7 @@ MD = function()
 				var className = (x.length === 1) ? 'controls' : 'command';
 				return '<span class="md-code-syntax md-code-syntax-' + className + '">' + x + '</span>';
 			}
-			line = line.replace(/(([\=\;\{\}\(\)\[\]\"\.]){1,1}|(join[\.]{1,1})|(console\.log)|break|case|catch|class[^a-z0-9]{1,}|continue|default|delete|(do[^a-z0-9]{1,})|(else[^a-z0-9]{1,})|(enum[^a-z0-9]{1,})|(export[s]{0,1})|module|extends|false|(for[^a-z0-9]{1,1})|from|(as[^a-z0-9]{1,1})|(in[^a-z0-9]{1,})|function|if|implements|import|instanceof|interface|let|new[^a-z0-9]{1,}|null|package|private|protected|static|return|super|switch|this|throw|true|try|(typeof[\s]{1,1})|var|while|with|yield){1,1}/g, replaceCommands); 
+			line = line.replace(/(([\=\;\{\}\(\)\[\]\"\.]){1,1}|(join[\.]{1,1})|(console\.log)|break|case|catch|class[^a-z0-9]{1,}|continue|default|delete|(do[^a-z0-9]{1,})|(else[^a-z0-9]{1,})|(enum[^a-z0-9]{1,})|(export[s]{0,1})|module|extends|false|(for[^a-z0-9]{1,1})|from|(as[^a-z0-9]{1,1})|([\s]{1,}in[\s]{1,})|function|if|implements|import|instanceof|interface|let|new[^a-z0-9]{1,}|null|package|private|protected|static|return|super|switch|this|throw|true|try|(typeof[\s]{1,1})|var|while|with|yield){1,1}/g, replaceCommands); 
 			line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
 			//line = line.replace(/([\"]{1,1}[^\"]{0,}[\"]{1,1}){1,1}/g, replaceSymbols);
 			lines[i] = line;
@@ -90,36 +106,212 @@ MD = function()
 
 	};
 
-	var codeHighlighterHTML = function(language, lines, addTags, parseCodeFunction) 
+	var codeHighlighterBash = function(language, lines, addTags, parseCodeFunction) 
 	{
 		for(var i in lines)
 		{
 			var line = lines[i];
-			var keywords;
-			keywords = new RegExp("");
 			var replaceSymbols = function(symbol) 
 			{
-				// console.log('arguments', arguments);
-				return '<span class="md-code-syntax md-code-syntax-attribute-name">' + arguments[2].trim() + '</span><span class="md-code-syntax md-code-syntax-attribute-control">&#61;</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span><span class="md-code-syntax md-code-syntax-attribute-value">' + arguments[5] + '</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span>';
+				return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
 			}
-			var replaceCommands = function(x, y, z, a, b)
+			var replaceCommands = function(x, y)
 			{
-				var attributes = (arguments[5] === '') ? '' : arguments[5];
-				// console.log('x', arguments);
-				// var className = (x.length === 1) ? 'controls' : 'command';
-				var res = new RegExp('(([a-zA-Z0-9]{1,})([\=]{1,1})([\"]{1,1})([^\"]{0,})([\"]{1,1}))', 'g');
-				attributes = attributes.replace(res, replaceSymbols);
-				return '<span class="md-code-syntax md-code-syntax-controls">&lt;' + (arguments[2] === '</' ? '/' : '' ) + '</span><span class="md-code-syntax md-code-syntax-command">' + arguments[3] + '</span>' + attributes + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span>';
+				var className = (x.length === 1) ? 'controls' : 'command';
+				return '<span class="md-code-syntax md-code-syntax-' + className + '">' + y + '</span>' + ((y.length !== x.length) ? x.substring(y.length) : '');
 			}
-			var re = new RegExp('(([<]{1,1}[/]{0,1})(([\!]{1,1}DOCTYPE)|html|head|body|title|meta|link|style|a|h1|h2|h3|h4|h5|h6|p|img|audio|video|script|ul|ol|li|div|span|table|thead|tbody|tr|th|td|col|form|input|select|option|button|header|footer){1,1}([^>]{0,})([>]{1,1}))', 'g');
+			var re = new RegExp('(([#]{1,1}[^#]{1,})|(\!#.*)|echo[^a-zA-Z0-9]{1,}|tar[^a-zA-Z0-9]{1,}|print[^a-zA-Z0-9]{1,})', 'g')
 			line = line.replace(re, replaceCommands);
 			lines[i] = line;
 		}
 		return lines;
+
 	};
+
+	var codeHighlighterHTML = function(language, lines, addTags, parseCodeFunction) 
+	{
+		var isCodeJs  = false;
+		var isCodeJsStarted = false;
+		var isCodeJsEnded   = false;
+		var isCodeCss = false;
+		var isCodeCssStarted = false;
+		var isCodeCssEnded = false;
+		var codeJs  = [];
+		var codeCss = [];
+		for(var i in lines)
+		{
+			var line = lines[i];
+			var replaceSymbols = function(symbol) 
+			{
+				return '<span class="md-code-syntax md-code-syntax-attribute-name">' + arguments[2].trim() + '</span><span class="md-code-syntax md-code-syntax-attribute-control">&#61;</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span><span class="md-code-syntax md-code-syntax-attribute-value">' + arguments[5] + '</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span>';
+			}
+			var replaceCommands = function(x, y, z, a, b)
+			{
+				console.log('codeHighlighterHTML replaceCommands', arguments);
+
+				// console.log('isCodeJS X '+x, isCodeJs)
+				if(isCodeJs === false)
+				{
+					isCodeJs = (arguments[2] === '<' && arguments[3] === 'script' && (/(src)/g.exec(arguments[1]) === null)) ? true : false;
+					if(isCodeJs)
+					{
+						isCodeJsStarted = true;
+						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">script</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-javascript"><span class="md-code-syntax-lang-label">JAVASCRIPT</span>';
+					}
+				}
+				else
+				//if(isCodeJs === true)
+				{
+					isCodeJs = (arguments[2] === '</' && arguments[3] === 'script') ? false : true;
+					if(false === isCodeJs)
+					{
+						isCodeJsEnded = true;
+						return '</pre>' + arguments[8].substring(0, arguments[7]) + '<span class="md-code-syntax md-code-syntax-controls">&lt;/</span><span class="md-code-syntax md-code-syntax-command">script</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span>';
+					}
+				}
+
+				if(isCodeCss === false)
+				{
+					isCodeCss = (arguments[2] === '<' && arguments[3] === 'style' && (/(src)/g.exec(arguments[1]) === null)) ? true : false;
+					if(isCodeCss)
+					{
+						isCodeCssStarted = true;
+						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">style</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-css"><span class="md-code-syntax-lang-label">CSS</span>';
+					}
+				}
+				else
+				{
+					isCodeCss = (arguments[2] === '</' && arguments[3] === 'style') ? false : true;
+					if(false === isCodeCss)
+					{
+						isCodeCssEnded = true;
+						return '</pre>' + arguments[8].substring(0, arguments[7]) + '<span class="md-code-syntax md-code-syntax-controls">&lt;/</span><span class="md-code-syntax md-code-syntax-command">style</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span>';
+					}
+
+				}
+
+				var attributes = (arguments[5] === '') ? '' : arguments[5];
+				var res = new RegExp('(([a-zA-Z0-9]{1,})([\=]{1,1})([\"]{1,1})([^\"]{0,})([\"]{1,1}))', 'g');
+				attributes = attributes.replace(res, replaceSymbols);
+				var result = '<span class="md-code-syntax md-code-syntax-controls">&lt;' + (arguments[2] === '</' ? '/' : '' ) + '</span><span class="md-code-syntax md-code-syntax-command">' + arguments[3] + '</span>' + attributes + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span>';
+				return result;
+			}
+			var re = new RegExp('(([<]{1,1}[/]{0,1})(([\!]{1,1}DOCTYPE)|html|head|body|title|meta|link|style|a|h1|h2|h3|h4|h5|h6|p|img|audio|video|script|ul|ol|li|div|span|table|thead|tbody|tr|th|td|col|form|input|select|option|button|header|footer){1,1}([^>]{0,})([>]{1,1}))', 'g');
+			line = line.replace(re, replaceCommands);
+			if(isCodeJs && false === isCodeJsStarted && false === isCodeJsEnded)
+			{
+				console.log('isCodeJs '+line, isCodeJs)
+				line = (line.length > 1) ? line.replace(line, parseCodeLinesByLanguage('javascript', [line]).join('')) : line;
+			}
+			if(isCodeCss && false === isCodeCssStarted && false === isCodeCssEnded)
+			{
+				console.log('isCodeCss '+line, isCodeCss)
+				line = (line.length > 1) ? line.replace(line, parseCodeLinesByLanguage('css', [line]).join('')) : line;
+			}
+			lines[i] = line;
+			console.log('isCodeJS '+line, isCodeJs)
+			console.log('isCodeJsStarted '+line, isCodeJsStarted)
+			console.log('isCodeJsEnded '+line, isCodeJsEnded)
+
+			if(true === isCodeJsStarted || true === isCodeJsEnded)
+			{
+				isCodeJsStarted = false;
+				isCodeJsEnded   = false;
+			}
+			if(true === isCodeCssStarted || true === isCodeCssEnded)
+			{
+				isCodeCssStarted = false;
+				isCodeCssEnded   = false;
+			}
+			console.log('isCodeJS '+line, isCodeJs)
+			console.log('isCodeJsStarted '+line, isCodeJsStarted)
+			console.log('isCodeJsEnded '+line, isCodeJsEnded)
+		}
+		return lines;
+	};
+
+	var codeHighlighterCSS = function(language, lines, addTags, parseCodeFunction) 
+	{
+		console.log('CSS', lines);
+		var isCSSStarted = false;
+
+		var replaceSymbols = function(symbol) 
+		{
+			var notSymbol = ['p', 'i', 'b', 'a', '@', '.', '#'];
+			symbol = symbol.trim();
+			var className = (symbol.length === 1 && notSymbol.indexOf(symbol) === -1) ? 'controls' : 'command';
+			if(symbol.length === 1 && (symbol === '<' || symbol === '>'))
+			{
+				symbol = (symbol === '<' ? '&lt;' : '&gt;');
+			}
+			return '<span class="md-code-syntax md-code-syntax-' + className + '">' + symbol + '</span>';
+		}
+
+		for(var i in lines)
+		{
+			var line  = lines[i];
+			var rules = line.split('}');
+			for(var j in rules)
+			{
+				var rule = rules[j];
+				var parts = rule.split('{');
+				var isElements = (parts.length > 1);
+				var isColon = false;
+				if(false === isElements)
+				{
+					var colonResult = /[,]{1,1}[\s]{0,}$/.exec(rule);
+					if(colonResult !== null)
+					{
+						isElements = true;
+						parts = [rule.substring(0, colonResult.index), ''];
+					}
+					isElements = (colonResult !== null);
+					isColon    = true;
+				}
+				var definition = (isElements) ? parts[1] : parts[0];
+				if(isElements)
+				{
+					var re = new RegExp('(([\<\>\@\(\),]{1,})|([a-zA-Z0-9\-\.\#\:\=\",]{1,}))', 'g');
+					parts[0] = parts[0].replace(re, replaceSymbols);
+				}
+
+				var definitionParts = definition.split(';');
+				for(var d in definitionParts)
+				{
+					var definitionPart = definitionParts[d].split(':');
+					if(definitionPart.length === 1)
+					{
+						continue; //@todo
+					}
+					definitionPart[0] = '<span class="md-code-syntax md-code-syntax-attribute-name">' + definitionPart[0] + '</span><span class="md-code-syntax md-code-syntax-controls">';
+					definitionPart[1] = '</span><span class="md-code-syntax md-code-syntax-attribute-value">' + definitionPart[1] + '</span>';
+					definitionParts[d] = definitionPart.join('<span class="md-code-syntax md-code-syntax-attribute-control">&#58;</span>');  //:
+				}
+				definition = definitionParts.join('<span class="md-code-syntax md-code-syntax-controls">&#59;</span>'); //;
+				if(isElements)
+				{
+					parts[1] = definition;
+				}
+				else
+				{
+					parts[0] = definition;	
+				}
+				var symbolOpen = (isColon) ? ',' : '&#123;';
+				rules[j] = parts.join('<span class="md-code-syntax md-code-syntax-symbol">' + symbolOpen + '</span>'); //{
+			}
+			lines[i] = rules.join('<span class="md-code-syntax md-code-syntax-symbol">&#125;</span>'); //}
+		}
+		return lines;
+	};
+
+
 
 	var codeHighlighterGeneral = function(language, lines, addTags, parseCodeFunction)
 	{
+		for(var i in lines)
+		{
+			lines[i] = sanitizeHTML(lines[i]);
+		}
 		return lines;
 	}
 
@@ -127,11 +319,10 @@ MD = function()
 		general: codeHighlighterGeneral,
 		javascript: codeHighlighterJavascript,
 		python: codeHighlighterPython,
-		html: codeHighlighterHTML
+		html: codeHighlighterHTML,
+		css: codeHighlighterCSS,
+		bash: codeHighlighterBash
 	};
-
-
-
 
 	var formatNonBreak = [];
 	var formatCode     = [];
@@ -149,7 +340,6 @@ MD = function()
 			var line = lines[i].trim();
 			if(line !== '')
 			{
-
 				linesOutput.push(lines[i]);
 				continue;
 			}
@@ -200,7 +390,6 @@ MD = function()
 		return linesOutput;
 	}
 
-
 	var processInlineItem = function(line)
 	{
 		var lineResult = /(?:([\*]{1,3}))([^\*\n]+[^\*\s])\1/.exec(line);
@@ -243,7 +432,6 @@ MD = function()
         }
         return linesOutput;
 	}
-
 
 	var processImagesItem = function(line)
 	{
@@ -302,41 +490,65 @@ MD = function()
         return linesOutput;
 	}
 
-
-	var parseCodeHTMLLine = function(line)
-	{
-		var keywords;
-		keywords = new RegExp("");
-		var replaceSymbols = function(symbol) 
-		{
-			return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
-		}
-		var replaceCommands = function(full, part1, part2, part3) 
-		{
-			console.log('arg', arguments);
-			// var className = (x.length === 1) ? 'controls' : 'command';
-			// return '<span class="md-code-syntax md-code-syntax-' + className + '">' + x + '</span>';
-			return full;
-		}
-		//var text = '<!DOCTYPE html><html><head><title>neco</title></head><body id="neco" class="trida" onload="function(){console.log('ready');}"></body></html>';
-		// /([<]{1,1})[\s]{0,}(([\!]{1,1}DOCTYPE)|html|head|body|title|meta|link|style|h1|h2|h3|h4|h5|h6|ul|ol|li|div|span|table|thead|tbody|tr|th|td|col|form|input|select|option|header|footer){1,1}([^>]{0,})([>]{0,})/i
-		line = line.replace(/([<]{1,1})[\s]{0,}(([\!]{1,1}DOCTYPE)|html|head|body|title|meta|link|style|h1|h2|h3|h4|h5|h6|ul|ol|li|div|span|table|thead|tbody|tr|th|td|col|form|input|select|option|header|footer){1,1}([^>]{0,})([>]{0,})/g, replaceCommands); 
-		//line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
-		return line;
-	}
-
-
 	var parseCodeLinesByLanguage = function(language, lines)
 	{
-		// console.log('parseCodeLinesByLanguage ' + language, lines);
 		language   = (isRegisteredCodeHighlight(language)) ? language : 'general';
-		// console.log('processCodeLines output', registeredCodeHighlight[language](language, lines, false, parseCodeLinesByLanguage));
 		return registeredCodeHighlight[language](language, lines, false, parseCodeLinesByLanguage);
+	}
+
+	var parseCodeInline = function(lines)
+	{
+		var allowedLanguages = ['javascript', 'python', 'html', 'css', 'bash'];
+		var language         = 'general';
+		linesOutput = [];
+
+		var replaceCode = function(symbol) 
+		{
+			console.log(' ::;; replaceCode ;;:: ', arguments);
+			var input  = arguments[5];
+
+			var language   = 'general';
+        	var langResult = /^([a-zA-Z0-9]{2,})/g.exec(arguments[2]);
+        	if(langResult !== null)
+        	{
+        		language = (allowedLanguages.indexOf(langResult[1]) === -1) ? language : langResult[1];
+        	}
+			var code     = (language === 'general') ? arguments[2] : arguments[2].substring(language.length);
+			code         = parseCodeLinesByLanguage(language, [code]).join('');
+			if(language === 'general')
+			{
+				code         = code.replace(/[<]{1,1}/g, '&lt;'); //@todo ugly hack :P
+				code         = code.replace(/[>]{1,1}/g, '&gt;');
+			}
+			var output   = '<pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-' + language + '">' + code + '</pre>';
+			return output;
+		}
+
+		for(var i in lines) 
+		{
+			if(formatCode.indexOf(i) !== -1)
+			{
+				linesOutput.push(lines[i]);
+				continue;
+			}
+
+			var lineResult = /([\`]{1,1})([^\`]{1,})([\`]{1,1})/g.exec(lines[i]);
+        	if(lineResult === null)
+        	{
+				linesOutput.push(lines[i]);
+				continue;
+        	}
+
+			var re = new RegExp('([\`]{1,1})([^\`]{1,})([\`]{1,1})', 'g')
+			lines[i] = lines[i].replace(re, replaceCode);
+			linesOutput.push(lines[i]);
+        }	
+        return linesOutput;
 	}
 
 	var parseCode = function(lines)
 	{
-		var allowedLanguages = ['javascript', 'python', 'html'];
+		var allowedLanguages = ['javascript', 'python', 'html', 'css', 'bash'];
 		var language         = 'general';
 		var linesOutput      = [];
 		var linesCode        = [];
@@ -350,7 +562,6 @@ MD = function()
 			}
 			language   = (isRegisteredCodeHighlight(language)) ? language : 'general';
 			var output = parseCodeLinesByLanguage(language, linesCode);
-			console.log('processCodeLines output', output);
 			//error in other than general (built-in) codeHighlighter have fallback to switch to try general codeHighlighter
 			if(false === U.isArray(output))
 			{
@@ -373,14 +584,16 @@ MD = function()
 			{
 				if(i === 0)
 				{
-					var lineTag  = '<pre';
-					lineTag     += ' class="' + config.code['class'];
-					lineTag     += ' md-code-syntax-lang-' + language + '">';
-					output[i]     = lineTag;// + (language === output[i] ? '' : output[i]);
+					var useLabel  = (language === 'general') ? false : true;
+					var lineTag   = '<pre';
+					lineTag      += ' class="' + config.code['class'];
+					lineTag      += (useLabel) ? ' lang-label' : '';
+					lineTag      += ' md-code-syntax-lang-' + language + '">';
+					lineTag      += (useLabel) ? '<span class="md-code-syntax-lang-label">' + (language.toUpperCase()) + '</span>' : '';
+					output[i]     = lineTag;
 				}
 				if(i === iLast)
 				{
-					console.log('i Last ' + iLast + ' . ' + i, output);
 					output[i]     = output[i] + '</pre>';
 				}
 				linesOutput.push(output[i]);
@@ -426,7 +639,6 @@ MD = function()
         		linesCode.push(lineResult[1]);
         		if(lineResult[2] !== '')
         		{
-        			console.log('processCodeLines()', linesCode);
         			processCodeLines();
         			isCodeStarted = false;
         		}
@@ -567,6 +779,150 @@ MD = function()
         return linesOutput;
 	}
 
+	var parseTable = function(lines)
+	{
+		var linesOutput = [];
+		var table = {
+			'header': [],
+			'rows': [],
+			'align': []
+		};
+		var isTableHeader       = false;
+		var isTableWaitingAlign = false;
+		var isTableStarted      = false;
+
+		var processRow = function(line)
+		{
+			var cols = line.split('|');
+			var row  = [];
+			for(var c in cols)
+			{
+				row.push(cols[c].trim());
+			}
+			return row;
+		}
+
+		var processTable = function()
+		{
+    		var line = '<table class="' + config.table['class'] + '"><tr>';
+			for(var c in table.header)
+			{
+				var i     = parseInt(c);
+				var align = table.align[i];
+				line += '<th align="' + align + '" class="text-' + align + '">' + table.header[c] + '</th>';
+			}
+			line += '</tr>';
+			linesOutput.push(line);
+			for(var r in table.rows)
+			{
+				var row    = table.rows[r];
+				var line   = '<tr>';
+				for(var c in row)
+				{
+					var i     = parseInt(c);
+					var align = table.align[i];
+					line += '<td align="' + align + '" class="text-' + align + '">' + row[c] + '</td>';
+				}
+				line += '</tr>';
+				linesOutput.push(line);
+			}
+			linesOutput[(linesOutput.length - 1)] += '</table>';
+			table = {
+				'header': [],
+				'rows': [],
+				'align': []
+			};
+		}
+
+		for (var i in lines) 
+		{
+			if(formatCode.indexOf(i) !== -1)
+			{
+				linesOutput.push(lines[i]);
+				continue;
+			}
+
+			var line = lines[i].replace(/^([\|]{1,1})/, '');
+			line     = line.replace(/([\|]{1,1})$/, '');
+			if(isTableWaitingAlign)
+			{
+				var lineResult = /([\|]{0,1}[\s\:]{0,1}[\-]{1,})/.exec(line);
+			}
+			else
+			{
+				var lineResult = /([\|]{1,1}[^\|]{1,})/.exec(line);
+			}
+
+        	if (lineResult === null) 
+        	{
+        		if(isTableStarted)
+        		{
+        			processTable();
+        			isTableStarted = false;
+        			isTableWaitingAlign = false;
+        			isTableHeader = false;
+        		}
+        		linesOutput.push(lines[i]);
+        		continue;
+        	}
+        	if(isTableWaitingAlign)
+        	{
+        		var cols = line.split('|');
+        		if(cols.length !== table.header.length)
+        		{
+        			throw new Error('align cols not match!');
+        		}
+        		for(var c in cols)
+        		{
+        			var colResult = /(([\:]{0,1})[\-]{1,}[\s]{0,}([\:]{0,1}))/.exec(cols[c]); //[":--- :", ":--- :", ":", ":", index: 0, input: ":--- :"]
+        			var align     = 'left';
+        			if(colResult === null)
+        			{
+        				table.align.push(align);
+        				continue;
+        			}
+        			var alignText = colResult[2] + '-' + colResult[3];
+        			
+        			switch(alignText)
+        			{
+						case ':-:':
+							align = 'center';
+							break;
+
+						case '-:':
+							align = 'right';
+							break;
+        			}
+        			table.align.push(align);
+        		}
+        		isTableWaitingAlign = false;
+        		isTableStarted      = true;
+        		continue;
+        	}
+        	else
+        	{
+				var row  = processRow(line);
+				if(false === isTableHeader)
+				{
+					table.header        = row;
+		    		isTableHeader       = true;
+		    		isTableWaitingAlign = true;
+				}
+				else
+				{
+					table.rows.push(row);
+				}
+        	}
+			formatNonBreak.push(i);
+        }
+
+		if(isTableStarted)
+		{
+			processTable();
+		}
+        return linesOutput;
+	}
+
 	var formatBreaks = function(lines)
 	{
 		for(var i in lines)
@@ -599,9 +955,11 @@ MD = function()
 		lines = parseInline(lines);
 		lines = parseLinks(lines);
 		lines = parseTableSimple(lines);
+		lines = parseTable(lines);
 		lines = parseLists(lines);
 		lines = formatBreaks(lines);
-		console.log('MD RESULT:', lines.join('<br>'))
+		//console.log('parseCodeInline', parseCodeInline(lines));
+		// console.log('MD RESULT:', lines.join('<br>'))
 		return lines.join('\n');
 	}
 
@@ -630,94 +988,3 @@ MD = function()
 		'registerCodeHighlight': _registerCodeHighlight
 	}
 }
-
-
-var MD_ADDONS = {
-	codeHighlighters: {},
-
-	addCodeHighlighter: function(language, processFunction)
-	{
-		if(false === U.isString(language))
-		{
-			throw new Error('MD_ADDONS addCodeHighlighter Error: invalid language!');
-		}
-		if(false === U.isFunction(processFunction))
-		{
-			throw new Error('MD_ADDONS addCodeHighlighter Error: invalid process function!');
-		}
-		if(true === U.has(this.codeHighlighters, language))
-		{
-			throw new Error('MD_ADDONS addCodeHighlighter Error: language allready registered!');
-		}
-		this.codeHighlighters[language] = processFunction;
-	},
-
-	getAllCodeHighlighters: function()
-	{
-		return this.codeHighlighters;
-	}
-};
-
-
-MD_ADDONS.addCodeHighlighter('general', function(lines, language, addTags, parseCodeFunction){
-
-	return lines;
-
-});
-
-
-
-MD_ADDONS.addCodeHighlighter('javascript', function(lines, language, addTags, parseCodeFunction){
-	for(var i in lines)
-	{
-		var line = lines[i];
-		var keywords;
-		keywords = new RegExp("");
-		var replaceSymbols = function(symbol) 
-		{
-			return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
-		}
-		var replaceCommands = function(x) 
-		{
-			var className = (x.length === 1) ? 'controls' : 'command';
-			return '<span class="md-code-syntax md-code-syntax-' + className + '">' + x + '</span>';
-		}
-		line = line.replace(/(([\=\;\{\}\(\)\[\]\"\.]){1,1}|(join[\.]{1,1})|(console\.log)|break|case|catch|class|continue|default|delete|(do[\s]{0,}[;]{0,1})|else|enum|(export[s]{0,1})|module|extends|false|(for\s{1,1})|from|(as\s{1,1})|(in\s{1,1})|function|if|implements|import|instanceof|interface|let|new|null|package|private|protected|static|return|super|switch|this|throw|true|try|(typeof[\s]{1,1})|var|while|with|yield){1,1}/g, replaceCommands); 
-		line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
-		//line = line.replace(/([\"]{1,1}[^\"]{0,}[\"]{1,1}){1,1}/g, replaceSymbols);
-		lines[i] = line;
-	}
-	return lines;
-});
-
-MD_ADDONS.addCodeHighlighter('python', function(lines, language, addTags, parseCodeFunction){
-	for(var i in lines)
-	{
-		var line = lines[i];
-		var keywords;
-		keywords = new RegExp("");
-		var replaceSymbols = function(symbol) 
-		{
-			return '<span class="md-code-syntax md-code-syntax-symbol">' + symbol + '</span>';
-		}
-		var replaceCommands = function(x, y)
-		{
-			var className = (x.length === 1) ? 'controls' : 'command';
-			return '<span class="md-code-syntax md-code-syntax-' + className + '">' + y + '</span>' + ((y.length !== x.length) ? x.substring(y.length) : '');
-		}
-		while(line.indexOf('%') >= 0)
-		{
-			line = line.replace('%', ':::');
-		}
-		var re = new RegExp('(([\(\)]){1,1}|True|False|class|finally|return|None|print|continue|lambda|from|nonlocal|while|global|with|elif|yield|assert|else|import|pass|break|except|raise|(def[\s\:]{1,})|in|if|(or[\s]{1,})|(is[\s]{1,})|(def[^a-zA-Z0-9]{1,})|try|not|as){1,1}', 'g')
-		line = line.replace(re, replaceCommands);
-		line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
-		line = line.replace(/([\:]{3,3}){1,1}/g, function(x){
-			return '<span class="md-code-syntax md-code-syntax-percent">&#37;</span>';
-		});
-		lines[i] = line;
-
-	}
-	return lines;
-
-});
