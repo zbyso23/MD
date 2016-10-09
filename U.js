@@ -6,8 +6,7 @@ var U =
 	},
 	has: function(input, property)
 	{
-
-		return (typeof input === "object" && Object.prototype.toString.call(input) !== '[object Array]' && input.hasOwnProperty(property) === true);
+		return (this.isObject(input) === true && input.hasOwnProperty(property) === true);
 	},
 	isArray: function(input)
 	{
@@ -25,6 +24,10 @@ var U =
 	{
 		return (typeof input === "string");
 	},
+	isBool: function(input)
+	{
+		return (typeof input === "boolean");
+	},
 	isFloat: function(input)
 	{
 		return (typeof input === "number" && input !== Math.floor(input));
@@ -32,6 +35,10 @@ var U =
 	isInteger: function(input)
 	{
 		return (typeof input === "number" && input === Math.floor(input));
+	},
+	isInstance: function(input, instance)
+	{
+		return (this.isObject(input) === true && (input instanceof instance));
 	},
 	isSet: function(input)
 	{
@@ -44,5 +51,5 @@ var U =
 	isNull: function(input)
 	{
 		return (typeof input === "object" && Object.prototype.toString.call(input) === '[object Null]');
-	}	
+	}
 }
