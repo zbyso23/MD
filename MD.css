@@ -76,6 +76,19 @@ pre.md-code-syntax-lang-css span.md-code-syntax-lang-label {
     color: #6a709a;
 }
 
+pre.md-code-syntax-lang-ini span.md-code-syntax-lang-label {
+    background-color: #b1c1e6;
+    color: #11442c;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-lang-label {
+    background-color: #515d95;
+    color: #99a4d6;
+}
+
+
+/*   LANG DEFINITIONS    */
+
 pre.md-code-syntax-lang-javascript {
   background-color: #ffedc5;
 
@@ -217,6 +230,80 @@ pre.md-code-syntax-lang-bash span {
   font-weight: bold;
   margin-bottom: 2px;
 }
+
+
+pre.md-code-syntax-lang-ini {
+  background-color: #11442c;
+  color: #ff902a;
+}
+
+pre.md-code-syntax-lang-ini span {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+pre.md-code-syntax-lang-ini span.md-code-syntax-comments {
+  font-weight: normal;
+  font-style: italic;
+  color: #bfbbbb;
+}
+
+pre.md-code-syntax-lang-ini span.md-code-syntax-attribute-name {
+  font-weight: normal;
+  color: #eac1c1;
+}
+
+pre.md-code-syntax-lang-ini span.md-code-syntax-attribute-value {
+  font-weight: bold;
+  color: #b1c1e6;
+}
+
+pre.md-code-syntax-lang-ini span.md-code-syntax-attribute-control {
+  font-weight: normal;
+  color: #98ceff;
+}
+
+
+pre.md-code-syntax-lang-php {
+  background-color: #99a4d6;
+  color: #222530;
+}
+
+pre.md-code-syntax-lang-php span {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-command {
+  color: #4f5b93;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-controls {
+  
+  color: #dffdfc;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-symbol {
+  color: #fdf2f7;
+  font-weight: normal;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-attribute-name {
+  color: #847bf1;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-attribute-control {
+  color: #729272;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-attribute-quote {
+  color: #841212;
+}
+
+pre.md-code-syntax-lang-php span.md-code-syntax-attribute-value {
+  color: #599242;
+}
+
 
 pre span.md-code-syntax-percent {
   content: '%';
