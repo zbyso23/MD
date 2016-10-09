@@ -958,6 +958,7 @@ MD = function()
 		lines = parseTable(lines);
 		lines = parseLists(lines);
 		lines = formatBreaks(lines);
+		lines = parseCodeInline(lines);
 		//console.log('parseCodeInline', parseCodeInline(lines));
 		// console.log('MD RESULT:', lines.join('<br>'))
 		return lines.join('\n');
