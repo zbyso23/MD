@@ -21,7 +21,8 @@ built in code syntax highlight:
 - css *(1)*
 - bash *(1)*
 
-* is supported only in extended mode (default: basic)
+
+(1) is supported only in extended mode (default: basic)
 
 usage:
 ```javascript
