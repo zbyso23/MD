@@ -2,9 +2,38 @@
 // Distributed under an GNU GENERAL PUBLIC LICENSE version 3: https://github.com/zbyso23/MD/blob/master/LICENSE
 
 var MD, MD_ADDONS;
-MD = function()
+MD = function(config)
 {
-	var config = {
+	/*
+	config:
+	{
+		mode: 'basic' /* extended - with all new code highlighters and simple table
+	}
+	*/
+	var sanitizeConfig = function(config)
+	{
+		config          = (false === U.isObject(config)) ? {} : config;
+		var configNew   = {};
+		var modeAllowed = ['basic', 'extended']; // , custom @todo :)
+		var mode        = modeAllowed[0];
+		if(U.has(config, 'mode'))
+		{
+			var modeNew = (U.isString(config['mode'])) ? config['mode'] : mode;
+			mode        = (modeAllowed.indexOf(modeNew) === -1) ? mode : modeNew;
+		}
+		configNew.mode  = mode;
+		return configNew;
+	}
+	config = sanitizeConfig(config);
+
+	var getModeLanguage = function(language)
+	{
+		var allowedHighlights = ['general', 'javascript', 'python'];
+		language = (config.mode === 'basic' && allowedHighlights.indexOf(language) === -1) ? 'general' : language;
+		return language;
+	}
+
+	var configUI = {
 		strong: {
 			'html': 'strong',
 			'class': 'md-strong',
@@ -31,11 +60,11 @@ MD = function()
 		table: {
 			'class': 'table md-table table-striped table-hover'
 		}
-	}
+	};
 
-	var sanitizeHTML = function(string)
+	var unHTML = function(string)
 	{
-		string = string.replace(/[<>{};:]/g, function (m) {
+		string = string.replace(/[<>{};:]/g, function(m) {
 			return {
 				'<': '&lt;',
 				'>': '&gt;',
@@ -130,14 +159,14 @@ MD = function()
 
 	var codeHighlighterHTML = function(language, lines, addTags, parseCodeFunction) 
 	{
-		var isCodeJs  = false;
-		var isCodeJsStarted = false;
-		var isCodeJsEnded   = false;
-		var isCodeCss = false;
+		var isCodeJs         = false;
+		var isCodeJsStarted  = false;
+		var isCodeJsEnded    = false;
+		var isCodeCss        = false;
 		var isCodeCssStarted = false;
-		var isCodeCssEnded = false;
-		var codeJs  = [];
-		var codeCss = [];
+		var isCodeCssEnded   = false;
+		var codeJs           = [];
+		var codeCss          = [];
 		for(var i in lines)
 		{
 			var line = lines[i];
@@ -145,18 +174,15 @@ MD = function()
 			{
 				return '<span class="md-code-syntax md-code-syntax-attribute-name">' + arguments[2].trim() + '</span><span class="md-code-syntax md-code-syntax-attribute-control">&#61;</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span><span class="md-code-syntax md-code-syntax-attribute-value">' + arguments[5] + '</span><span class="md-code-syntax md-code-syntax-attribute-quote">&#34;</span>';
 			}
-			var replaceCommands = function(x, y, z, a, b)
+			var replaceCommands = function()
 			{
-				console.log('codeHighlighterHTML replaceCommands', arguments);
-
-				// console.log('isCodeJS X '+x, isCodeJs)
 				if(isCodeJs === false)
 				{
 					isCodeJs = (arguments[2] === '<' && arguments[3] === 'script' && (/(src)/g.exec(arguments[1]) === null)) ? true : false;
 					if(isCodeJs)
 					{
 						isCodeJsStarted = true;
-						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">script</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-javascript"><span class="md-code-syntax-lang-label">JAVASCRIPT</span>';
+						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">script</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + configUI.code['class'] + ' md-code-syntax-lang-javascript"><span class="md-code-syntax-lang-label">JAVASCRIPT</span>';
 					}
 				}
 				else
@@ -176,7 +202,7 @@ MD = function()
 					if(isCodeCss)
 					{
 						isCodeCssStarted = true;
-						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">style</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-css"><span class="md-code-syntax-lang-label">CSS</span>';
+						return '<span class="md-code-syntax md-code-syntax-controls">&lt;</span><span class="md-code-syntax md-code-syntax-command">style</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span><pre class="inline ' + configUI.code['class'] + ' md-code-syntax-lang-css"><span class="md-code-syntax-lang-label">CSS</span>';
 					}
 				}
 				else
@@ -187,7 +213,6 @@ MD = function()
 						isCodeCssEnded = true;
 						return '</pre>' + arguments[8].substring(0, arguments[7]) + '<span class="md-code-syntax md-code-syntax-controls">&lt;/</span><span class="md-code-syntax md-code-syntax-command">style</span>' + arguments[5] + '<span class="md-code-syntax md-code-syntax-controls">&gt;</span>';
 					}
-
 				}
 
 				var attributes = (arguments[5] === '') ? '' : arguments[5];
@@ -209,9 +234,6 @@ MD = function()
 				line = (line.length > 1) ? line.replace(line, parseCodeLinesByLanguage('css', [line]).join('')) : line;
 			}
 			lines[i] = line;
-			console.log('isCodeJS '+line, isCodeJs)
-			console.log('isCodeJsStarted '+line, isCodeJsStarted)
-			console.log('isCodeJsEnded '+line, isCodeJsEnded)
 
 			if(true === isCodeJsStarted || true === isCodeJsEnded)
 			{
@@ -223,18 +245,13 @@ MD = function()
 				isCodeCssStarted = false;
 				isCodeCssEnded   = false;
 			}
-			console.log('isCodeJS '+line, isCodeJs)
-			console.log('isCodeJsStarted '+line, isCodeJsStarted)
-			console.log('isCodeJsEnded '+line, isCodeJsEnded)
 		}
 		return lines;
 	};
 
 	var codeHighlighterCSS = function(language, lines, addTags, parseCodeFunction) 
 	{
-		console.log('CSS', lines);
 		var isCSSStarted = false;
-
 		var replaceSymbols = function(symbol) 
 		{
 			var notSymbol = ['p', 'i', 'b', 'a', '@', '.', '#'];
@@ -304,13 +321,11 @@ MD = function()
 		return lines;
 	};
 
-
-
 	var codeHighlighterGeneral = function(language, lines, addTags, parseCodeFunction)
 	{
 		for(var i in lines)
 		{
-			lines[i] = sanitizeHTML(lines[i]);
+			lines[i] = unHTML(lines[i]);
 		}
 		return lines;
 	}
@@ -367,7 +382,7 @@ MD = function()
         		continue;
         	}
         	var headerType;
-        	var className  = config.header.class;
+        	var className  = configUI.header.class;
         	switch(lineResult[2])
         	{
 				case '#':
@@ -383,7 +398,7 @@ MD = function()
 					headerType = 'h4';
 					break;
         	}
-        	var line = '<' + headerType + ' class="' + config.header['class'] + '">' + lineResult[3] + '</' + headerType + '>';
+        	var line = '<' + headerType + ' class="' + configUI.header['class'] + '">' + lineResult[3] + '</' + headerType + '>';
         	linesOutput.push(line);
         	formatNonBreak.push(i);
 		}
@@ -403,11 +418,11 @@ MD = function()
 		{
 			case '*':
 				formatType = 'em';
-				className  = config.em['class'];
+				className  = configUI.em['class'];
 				break;
 			case '**':
 				formatType = 'strong';
-				className  = config.strong['class'];
+				className  = configUI.strong['class'];
 				break;
 			default:
 				formatType = 'strong';
@@ -441,7 +456,7 @@ MD = function()
     		return line;
     	}
     	var lineImage = '<img src="' + lineResult[6] + '"';
-    	lineImage += ' class="' + config.image['class'] + '"';
+    	lineImage += ' class="' + configUI.image['class'] + '"';
     	lineImage += '>';
     	line = line.replace(lineResult[0], lineImage);
     	return processImagesItem(line);
@@ -492,39 +507,35 @@ MD = function()
 
 	var parseCodeLinesByLanguage = function(language, lines)
 	{
-		language   = (isRegisteredCodeHighlight(language)) ? language : 'general';
+		language = getModeLanguage(language);
+		language = (isRegisteredCodeHighlight(language)) ? language : 'general';
 		return registeredCodeHighlight[language](language, lines, false, parseCodeLinesByLanguage);
 	}
 
 	var parseCodeInline = function(lines)
 	{
-		var allowedLanguages = ['javascript', 'python', 'html', 'css', 'bash'];
-		var language         = 'general';
-		linesOutput = [];
+		var language    = 'general';
+		var linesOutput = [];
 
 		var replaceCode = function(symbol) 
 		{
-			console.log(' ::;; replaceCode ;;:: ', arguments);
-			var input  = arguments[5];
-
+			var input      = arguments[5];
 			var language   = 'general';
-        	var langResult = /^([a-zA-Z0-9]{2,})/g.exec(arguments[2]);
+        	var langResult = /^([a-zA-Z0-9]{2,}[\s]{1,})/g.exec(arguments[2]);
+        	var codeIndex  = 0;
         	if(langResult !== null)
         	{
-        		language = (allowedLanguages.indexOf(langResult[1]) === -1) ? language : langResult[1];
+        		var languageNew = langResult[1].trim();
+        		codeIndex       = langResult[1].length;
+        		language        = (isRegisteredCodeHighlight(languageNew)) ? getModeLanguage(languageNew) : 'general';
         	}
-			var code     = (language === 'general') ? arguments[2] : arguments[2].substring(language.length);
+			var code     = (language === 'general') ? arguments[2] : arguments[2].substring(codeIndex);//.replace('[\s]');
 			code         = parseCodeLinesByLanguage(language, [code]).join('');
-			if(language === 'general')
-			{
-				code         = code.replace(/[<]{1,1}/g, '&lt;'); //@todo ugly hack :P
-				code         = code.replace(/[>]{1,1}/g, '&gt;');
-			}
-			var output   = '<pre class="inline ' + config.code['class'] + ' md-code-syntax-lang-' + language + '">' + code + '</pre>';
+			var output   = '<pre class="inline ' + configUI.code['class'] + ' md-code-syntax-lang-' + language + '" title="' + ((language === 'general') ? 'code' : 'code: ' + language ) + '">' + code + '</pre>';
 			return output;
 		}
 
-		for(var i in lines) 
+		for(var i in lines)
 		{
 			if(formatCode.indexOf(i) !== -1)
 			{
@@ -539,7 +550,7 @@ MD = function()
 				continue;
         	}
 
-			var re = new RegExp('([\`]{1,1})([^\`]{1,})([\`]{1,1})', 'g')
+			var re = new RegExp('([\`]{1,1})([^\`]{1,})([\`]{1,1})', 'g');
 			lines[i] = lines[i].replace(re, replaceCode);
 			linesOutput.push(lines[i]);
         }	
@@ -548,7 +559,6 @@ MD = function()
 
 	var parseCode = function(lines)
 	{
-		var allowedLanguages = ['javascript', 'python', 'html', 'css', 'bash'];
 		var language         = 'general';
 		var linesOutput      = [];
 		var linesCode        = [];
@@ -561,6 +571,7 @@ MD = function()
 				return;
 			}
 			language   = (isRegisteredCodeHighlight(language)) ? language : 'general';
+
 			var output = parseCodeLinesByLanguage(language, linesCode);
 			//error in other than general (built-in) codeHighlighter have fallback to switch to try general codeHighlighter
 			if(false === U.isArray(output))
@@ -586,7 +597,7 @@ MD = function()
 				{
 					var useLabel  = (language === 'general') ? false : true;
 					var lineTag   = '<pre';
-					lineTag      += ' class="' + config.code['class'];
+					lineTag      += ' class="' + configUI.code['class'];
 					lineTag      += (useLabel) ? ' lang-label' : '';
 					lineTag      += ' md-code-syntax-lang-' + language + '">';
 					lineTag      += (useLabel) ? '<span class="md-code-syntax-lang-label">' + (language.toUpperCase()) + '</span>' : '';
@@ -627,7 +638,8 @@ MD = function()
         	if(false === isCodeStarted)
         	{
         		linesCode = [];
-        		language  = (allowedLanguages.indexOf(lineResult[2].trim()) === -1) ? 'general' : lineResult[2].trim();
+        		var languageNew = lineResult[2].trim();
+				language = (isRegisteredCodeHighlight(languageNew)) ? getModeLanguage(languageNew) : 'general';
         		linesCode.push(lineResult[2]);
         		if(lineResult[3] === '')
         		{
@@ -686,7 +698,7 @@ MD = function()
         		isListOrderedCurrent = (lineResult[1] === '-') ? true : false;
         		if(isListOrderedCurrent !== isListOrdered)
         		{
-        			line += (false === isListOrderedCurrent) ? '</ol><ul class="' + config.list['class'] + '">' : '</ul><ol class="' + config.listOrdered['class'] + '">';
+        			line += (false === isListOrderedCurrent) ? '</ol><ul class="' + configUI.list['class'] + '">' : '</ul><ol class="' + configUI.listOrdered['class'] + '">';
         			isListOrdered = isListOrderedCurrent;
         		}
         		line += '<li>' + lineResult[3].trim() + '</li>';
@@ -696,11 +708,11 @@ MD = function()
         		isListOrdered = (lineResult[1] === '-') ? true : false;
         		if(isListOrdered)
         		{
-        			var line = '<ol class="' + config.listOrdered['class'] + '">';
+        			var line = '<ol class="' + configUI.listOrdered['class'] + '">';
         		}
         		else
         		{
-        			var line = '<ul class="' + config.list['class'] + '">';
+        			var line = '<ul class="' + configUI.list['class'] + '">';
         		}
     			isListStarted = true;
         		line += '<li>' + lineResult[3].trim() + '</li>';
@@ -766,7 +778,7 @@ MD = function()
         	{
         		isTableStarted = true;
         		var rows = lineResult[2].split(';');
-        		var line = '<table class="' + config.table['class'] + '"><tr>';
+        		var line = '<table class="' + configUI.table['class'] + '"><tr>';
         		for(var r in rows)
         		{
         			line += '<th>' + rows[r].trim() + '</th>';
@@ -804,7 +816,7 @@ MD = function()
 
 		var processTable = function()
 		{
-    		var line = '<table class="' + config.table['class'] + '"><tr>';
+    		var line = '<table class="' + configUI.table['class'] + '"><tr>';
 			for(var c in table.header)
 			{
 				var i     = parseInt(c);
@@ -954,7 +966,10 @@ MD = function()
 		lines = parseHeaders(lines);
 		lines = parseInline(lines);
 		lines = parseLinks(lines);
-		lines = parseTableSimple(lines);
+		if(config.mode === 'extended')
+		{
+			lines = parseTableSimple(lines);
+		}
 		lines = parseTable(lines);
 		lines = parseLists(lines);
 		lines = formatBreaks(lines);
@@ -980,6 +995,10 @@ MD = function()
 		if(true === isRegisteredCodeHighlight(language))
 		{
 			throw new Error('MD registerCodeHighlight Error: language allready registered!');
+		}
+		if(language !== getModeLanguage(language))
+		{
+			throw new Error('MD registerCodeHighlight Error: language not allowed by selected mode "' + config.mode + '"!');	
 		}
 		registeredCodeHighlight[language] = processFunction;
 	}
