@@ -31,7 +31,7 @@ usage:
 var mdConfig = { mode: 'extended' }; //mode: ['basic', 'extended']
 var md = new MD(mdConfig);
 var text = "#Header 1\n##Header 2\n###Header 3\n[Link Title](https://github.com/zbyso23/MD)";
-document.body.innerHTML = md.parser(text);
+document.body.innerHTML = md.parse(text);
 ```
 
 new syntax highlight supported by modules:
