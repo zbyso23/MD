@@ -1,1 +1,86 @@
-Hello world!
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="MD.css" />
+		<script src="U.min.js"></script>
+		<script src="MD.js"></script>
+		<script>
+		window.onload = () => {
+			var mdConfig = { mode: 'extended' }; //mode: ['basic', 'extended']
+			var md = new MD(mdConfig);
+			var processNewContent = () => {
+				var text = document.getElementById('source').value;
+				document.getElementById('destination').innerHTML = md.parse(text);
+			}
+			document.getElementById('source').addEventListener('keyup', () => {
+				processNewContent();
+			});
+			processNewContent();
+		}
+		</script>
+		<style>
+		* {
+			border: 0;
+			outline: none;
+			margin: 0;
+			padding: 0;
+		}
+
+		body > div {
+			display: flex;
+			flex-direction: row;
+		}
+
+		textarea {
+			background-color: #eee;
+			padding: 15px;
+		}
+
+		#source {
+			width: calc(50vw - 30px);
+			height: calc(100vh - 30px);
+		}
+
+		#destination {
+			width: 50vw;
+			height: 100vh;
+			font-family: sans-serif;
+		}
+		</style>
+	</head>
+	<body>
+		<div>
+			<textarea id="source">
+#Header 1
+##Header 2
+###Header 3
+[Link Title](https://github.com/zbyso23/MD)
+```php
+<?php 
+$x = 6;
+
+do {
+    echo "The number is: $x\n";
+    $x++;
+} while ($x <= 5);
+```
+
+```python
+#Function to left rotate arr[] of size n by d*/ 
+def leftRotate(arr, d, n): 
+    for i in range(d): 
+        leftRotatebyOne(arr, n) #left rotate arr[] of size n by d 
+  
+#Function to left Rotate arr[] of size n by 1*/  
+def leftRotatebyOne(arr, n): 
+    temp = arr[0] 
+    for i in range(n-1): 
+        arr[i] = arr[i+1] 
+    arr[n-1] = temp 
+```
+			</textarea>
+			<div id="destination"></div>
+		</div>
+	</body>
+</html>

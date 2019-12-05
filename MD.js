@@ -99,9 +99,20 @@ MD = function(config)
 				var className = (x.length === 1) ? 'controls' : 'command';
 				return '<span class="md-code-syntax md-code-syntax-' + className + '">' + x + '</span>';
 			}
+			var replaceComments = function(line, from) 
+			{
+				var newLine = '';
+				if(from > 0) newLine += line.substring(0, from - 1);
+				newLine += '<span class="md-code-syntax md-code-syntax-comment">' + line.substring(from) + '</span>';
+				return newLine;
+			}
 			line = line.replace(/(([\=\;\{\}\(\)\[\]\"\.]){1,1}|(join[\.]{1,1})|(console\.log)|break|case|catch|class[^a-z0-9]{1,}|continue|default|delete|(do[^a-z0-9]{1,})|(else[^a-z0-9]{1,})|(enum[^a-z0-9]{1,})|(export[s]{0,1})|module|extends|false|(for[^a-z0-9]{1,1})|from|(as[^a-z0-9]{1,1})|([\s]{1,}in[\s]{1,})|function|if|implements|import|instanceof|interface|let|new[^a-z0-9]{1,}|null|package|private|protected|static|return|super|switch|this|throw|true|try|(typeof[\s]{1,1})|var|while|with|yield){1,1}/g, replaceCommands); 
 			line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
 			//line = line.replace(/([\"]{1,1}[^\"]{0,}[\"]{1,1}){1,1}/g, replaceSymbols);
+			if(line.indexOf('//') > -1)
+			{
+				line = replaceComments(line, line.indexOf('//'));
+			}
 			lines[i] = line;
 		}
 		return lines;
@@ -123,16 +134,30 @@ MD = function(config)
 				var className = (x.length === 1) ? 'controls' : 'command';
 				return '<span class="md-code-syntax md-code-syntax-' + className + '">' + y + '</span>' + ((y.length !== x.length) ? x.substring(y.length) : '');
 			}
+			var replaceComments = function(line, from) 
+			{
+				var newLine = '';
+				if(from > 0) newLine += line.substring(0, from - 1);
+				newLine += '<span class="md-code-syntax md-code-syntax-comment">' + line.substring(from) + '</span>';
+				return newLine;
+			}
 			while(line.indexOf('%') >= 0)
 			{
 				line = line.replace('%', ':::');
 			}
-			var re = new RegExp('(([\(\)]){1,1}|True|False|class|finally|return|None|print|continue|lambda|from|nonlocal|while|global|with|elif|yield|assert|else|import|pass|break|except|raise|(def[\s\:]{1,})|in|if|(or[\s]{1,})|(is[\s]{1,})|(def[^a-zA-Z0-9]{1,})|try|not|as[\s]{1,}){1,1}', 'g')
-			line = line.replace(re, replaceCommands);
-			line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
-			line = line.replace(/([\:]{3,3}){1,1}/g, function(x) {
-				return '<span class="md-code-syntax md-code-syntax-percent">&#37;</span>';
-			});
+			if(line.indexOf('#') > -1)
+			{
+				line = replaceComments(line, line.indexOf('#'));
+			}
+			else
+			{
+				var re = new RegExp('(([\(\)]){1,1}|True|False|class|finally|return|None|print|continue|lambda|from|nonlocal|while|global|with|elif|yield|assert|else|import|pass|break|except|raise|(def[\s\:]{1,})|in|if|(or[\s]{1,})|(is[\s]{1,})|(def[^a-zA-Z0-9]{1,})|try|not|as[\s]{1,}){1,1}', 'g')
+				line = line.replace(re, replaceCommands);
+				line = line.replace(/([\']{1,1}[^\']{0,}[\']{1,1}){1,1}/g, replaceSymbols);
+				line = line.replace(/([\:]{3,3}){1,1}/g, function(x) {
+					return '<span class="md-code-syntax md-code-syntax-percent">&#37;</span>';
+				});
+			}
 			lines[i] = line;
 
 		}
@@ -206,7 +231,6 @@ MD = function(config)
 			}
 			var replaceCommands = function(x, y)
 			{
-				console.log('codeHighlighterPHP ', arguments);
 				if(arguments[5] === '$')
 				{
 					return '<span class="md-code-syntax md-code-syntax-controls">&#36;</span><span class="md-code-syntax md-code-syntax-symbol">' + unHTML(arguments[2].substring(1)) + '</span>' + arguments[0].substring(arguments[2].length);
@@ -218,8 +242,19 @@ MD = function(config)
 				var line = '<span class="md-code-syntax md-code-syntax-command">' + arguments[2] + '</span>' + arguments[0].substring(arguments[2].length);
 				return line;
 			}
+			var replaceComments = function(line, from) 
+			{
+				var newLine = '';
+				if(from > 0) newLine += line.substring(0, from - 1);
+				newLine += '<span class="md-code-syntax md-code-syntax-comment">' + line.substring(from) + '</span>';
+				return newLine;
+			}
 			var re = new RegExp('((([\=\(\)\{\}]{1,1})|(([$]{1,1})[a-zA-Z0-9_\-]{1,})|halt_compiler|endforeach|abstract|callable|case|catch|class|clone|const|continue|declare|default|elseif|empty|enddeclare|endfor|endif|endswitch|endwhile|exit|extends|final|finally|foreach|function|global|goto|implements|include|include_once|instanceof|insteadof|interface|isset|list|namespace|print|private|protected|public|require_once|require|return|static|switch|array|break|throw|trait|unset|while|yield|eval|echo|else|die|for|try|use|var|new|xor|and|as|do|if|or){1,1}[^a-zA-Z0-9$\(\)]{0,}){1,1}', 'gi')
 			line = line.replace(re, replaceCommands);
+			if(line.indexOf('//') > -1)
+			{
+				line = replaceComments(line, line.indexOf('//'));
+			}
 			lines[i] = line;
 		}
 		return lines;
